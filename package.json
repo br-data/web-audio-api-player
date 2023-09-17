@@ -35,6 +35,12 @@
     },
     "scripts": {
         "build": "rollup -c ./scripts/dist.js",
+        "build:setup": "touch .npmrc && npm config set @brdata:registry https://europe-west3-npm.pkg.dev/brdata-dev/brdata/ --userconfig .npmrc",
+        "build:package": "yarn run build:pre && yarn run build",
+        "publish:patch": "yarn run build:package && npm version patch --no-git-tag-version --no-commit-hooks && npm publish",
+        "publish:minor": "yarn run build:package && npm version minor --no-git-tag-version --no-commit-hooks && npm publish",
+        "publish:major": "yarn run build:package && npm version major --no-git-tag-version --no-commit-hooks && npm publish",
+        "artifactregistry-login": "npx google-artifactregistry-auth",
         "lint": "npx eslint src/**/* examples/simple-player/client/**/* examples/simple-player/server/**/*",
         "watch": "rollup -cw ./scripts/dist.js"
     },

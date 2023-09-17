@@ -7,3 +7,7 @@ logs
 
 # rollup-plugin-typescript2
 .rpt2_cache
+
+.idea
+dist
+src/*.js

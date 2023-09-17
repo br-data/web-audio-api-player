@@ -213,7 +213,7 @@ export class PlayerCore {
     }
 
     public getQueue(): ISound[] {
-        
+
         return this._queue;
 
     }
@@ -306,10 +306,11 @@ export class PlayerCore {
 
     }
 
-    public setPositionInSeconds(soundPositionInSeconds: number): void {
+    public setPositionInSeconds(soundPositionInSeconds: number, id?: number | string): void {
 
         // get the current sound if any
-        const currentSound = this._getSoundFromQueue({ whichSound: PlayerCore.CURRENT_SOUND });
+        const preferredSound = this._getSoundFromQueue({ whichSound: id  });
+        const currentSound = preferredSound || this._getSoundFromQueue({ whichSound: id || PlayerCore.CURRENT_SOUND });
 
         // if there is a sound currently being played
         if (currentSound !== null) {
@@ -736,7 +737,7 @@ export class PlayerCore {
     }
 
     protected _progressTrigger = (sound: ISound, timestamp: DOMHighResTimeStamp) => {
-        // throttle requests to not more than once every 200ms 
+        // throttle requests to not more than once every 200ms
         if ((timestamp - this._playingProgressPreviousTimestamp) >= this._options.playingProgressIntervalTime) {
             // execute playing progress callback
             this._playingProgress(sound);
@@ -792,7 +793,7 @@ export class PlayerCore {
             if (nextSound !== null) {
 
                 if (this._options.playNextOnEnded) {
-                    this.play({ whichSound: PlayerCore.PLAY_SOUND_NEXT });
+                    this.play({ whichSound: PlayerCore.CURRENT_SOUND });
                 }
 
             } else {
