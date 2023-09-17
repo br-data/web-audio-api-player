@@ -9,7 +9,6 @@ logs
 .rpt2_cache
 
 .idea
-dist
 src/*.js
 
 
