@@ -35,7 +35,6 @@
     },
     "scripts": {
         "build": "rollup -c ./scripts/dist.js",
-        "install": "npm run build",
         "build:pre": "gcloud artifacts print-settings npm --repository=npm-public --location=us-central1 > .npmrc",
         "build:setup": "touch .npmrc && npm config set @brdata:registry https://europe-west3-npm.pkg.dev/brdata-dev/brdata/ --userconfig .npmrc && yarn run artifactregistry-login",
         "build:package": "yarn run build:setup && yarn run build",
