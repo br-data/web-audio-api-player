@@ -11,3 +11,6 @@ logs
 .idea
 dist
 src/*.js
+
+
+.npmrc
