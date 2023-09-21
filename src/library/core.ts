@@ -31,6 +31,7 @@ export interface ICoreOptions {
     persistVolume?: boolean;
     loadPlayerMode?: typePlayerMode;
     audioContext?: AudioContext;
+    preload?:boolean;
 }
 
 export interface ISoundsQueueOptions {
@@ -174,6 +175,10 @@ export class PlayerCore {
             case PlayerCore.WHERE_IN_QUEUE_AT_START:
                 this._prependSoundToQueue(sound);
                 break;
+        }
+
+        if(this._options.preload){
+            this._loadSound(sound);
         }
 
         return sound;

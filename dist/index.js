@@ -631,6 +631,9 @@ var PlayerCore = (function () {
                 this._prependSoundToQueue(sound);
                 break;
         }
+        if (this._options.preload) {
+            this._loadSound(sound);
+        }
         return sound;
     };
     PlayerCore.prototype._appendSoundToQueue = function (sound) {

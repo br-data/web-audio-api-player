@@ -21,6 +21,7 @@ export interface ICoreOptions {
     persistVolume?: boolean;
     loadPlayerMode?: typePlayerMode;
     audioContext?: AudioContext;
+    preload?: boolean;
 }
 export interface ISoundsQueueOptions {
     soundAttributes: ISoundAttributes;
