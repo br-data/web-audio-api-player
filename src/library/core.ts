@@ -178,7 +178,7 @@ export class PlayerCore {
         }
 
         if(this._options.preload){
-            this._loadSound(sound);
+            this._loadSound(sound).then(() => console.debug("Loaded sound:", sound.url)).catch((e) => console.debug("Error on load sound:", sound.url, e));
         }
 
         return sound;
