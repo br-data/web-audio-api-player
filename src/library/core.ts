@@ -366,6 +366,7 @@ export class PlayerCore {
     }
 
     protected _loadSoundUsingAudioElement(sound: ISound): Promise<ISound | PlayerError> {
+        const that = this;
 
         return new Promise((resolve, reject) => {
 
@@ -429,6 +430,11 @@ export class PlayerCore {
                 };
 
                 sound.audioElement.addEventListener('error', errorListener);
+
+                if(that._options.preload){
+                    sound.audioElement.load();
+                }
+
 
             } else {
 
