@@ -432,6 +432,7 @@ export class PlayerCore {
                 sound.audioElement.addEventListener('error', errorListener);
 
                 if(that._options.preload){
+                    console.debug("Explicitly preloading now:", url)
                     sound.audioElement.load();
                 }
 

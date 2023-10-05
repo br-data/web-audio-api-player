@@ -732,6 +732,7 @@ var PlayerCore = (function () {
     };
     PlayerCore.prototype._loadSoundUsingAudioElement = function (sound) {
         var _this = this;
+        var that = this;
         return new Promise(function (resolve, reject) {
             var _a = _this._findBestSource(sound.source), url = _a.url, _b = _a.codec, codec = _b === void 0 ? null : _b;
             sound.url = url;
@@ -765,6 +766,10 @@ var PlayerCore = (function () {
                     reject(soundLoadingError);
                 };
                 sound.audioElement.addEventListener('error', errorListener_1);
+                if (that._options.preload) {
+                    console.debug("Explicitly preloading now:", url);
+                    sound.audioElement.load();
+                }
             }
             else {
                 console.debug("NO url for audio", url);
