@@ -632,7 +632,7 @@ var PlayerCore = (function () {
                 break;
         }
         if (this._options.preload) {
-            this._loadSound(sound);
+            this._loadSound(sound).then(function () { return console.debug("Loaded sound:", sound.url); }).catch(function (e) { return console.debug("Error on load sound:", sound.url, e); });
         }
         return sound;
     };
