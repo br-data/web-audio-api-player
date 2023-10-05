@@ -372,10 +372,9 @@ export class PlayerCore {
 
             // if the audio element has already been created
             // we are ready to play
-            /*if (sound.audioElement !== null) {
-                sound.isReadyToPLay = true;
+            if (sound.audioElement !== null && sound.isReadyToPLay) {
                 resolve(sound);
-            }*/
+            }
 
             // extract the url and codec from sources
             const { url, codec = null } = this._findBestSource(sound.source);
