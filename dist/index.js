@@ -631,6 +631,7 @@ var PlayerCore = (function () {
                 this._prependSoundToQueue(sound);
                 break;
         }
+        console.debug("Will preload audio?", this._options.preload);
         if (this._options.preload) {
             this._loadSound(sound).then(function () { return console.debug("Loaded sound:", sound.url); }).catch(function (e) { return console.debug("Error on load sound:", sound.url, e); });
         }
@@ -737,6 +738,7 @@ var PlayerCore = (function () {
             sound.codec = codec;
             sound.arrayBuffer = null;
             if (sound.url !== null) {
+                console.debug("Having url, trying to preload Audio", url);
                 var audioElement_1 = new Audio();
                 audioElement_1.crossOrigin = 'anonymous';
                 audioElement_1.src = sound.url;
@@ -748,6 +750,7 @@ var PlayerCore = (function () {
                 sound.isReadyToPLay = true;
                 _this._initializeAudioElementListeners(sound);
                 var canplaythroughListener_1 = function () {
+                    console.debug("Canplaythrough listener for audio!", url);
                     sound.audioElement.removeEventListener('canplaythrough', canplaythroughListener_1);
                     if (!isNaN(audioElement_1.duration)) {
                         sound.duration = audioElement_1.duration;
@@ -756,6 +759,7 @@ var PlayerCore = (function () {
                 };
                 sound.audioElement.addEventListener('canplaythrough', canplaythroughListener_1);
                 var errorListener_1 = function () {
+                    console.debug("Error listener for audio loading!", url);
                     sound.audioElement.removeEventListener('error', errorListener_1);
                     var soundLoadingError = new PlayerError('loading sound failed');
                     reject(soundLoadingError);
@@ -763,6 +767,7 @@ var PlayerCore = (function () {
                 sound.audioElement.addEventListener('error', errorListener_1);
             }
             else {
+                console.debug("NO url for audio", url);
                 var noUrlError = new PlayerError('sound has no url', 1);
                 reject(noUrlError);
             }

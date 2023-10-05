@@ -177,6 +177,7 @@ export class PlayerCore {
                 break;
         }
 
+        console.debug("Will preload audio?",this._options.preload )
         if(this._options.preload){
             this._loadSound(sound).then(() => console.debug("Loaded sound:", sound.url)).catch((e) => console.debug("Error on load sound:", sound.url, e));
         }
@@ -384,6 +385,8 @@ export class PlayerCore {
 
             if (sound.url !== null) {
 
+                console.debug("Having url, trying to preload Audio", url)
+
                 const audioElement = new Audio();
 
                 // in chrome you will get this error message in the console:
@@ -406,6 +409,7 @@ export class PlayerCore {
                 this._initializeAudioElementListeners(sound);
 
                 const canplaythroughListener = () => {
+                    console.debug("Canplaythrough listener for audio!", url)
                     // we don't need the listener anymore
                     sound.audioElement.removeEventListener('canplaythrough', canplaythroughListener);
                     // duration should now be available as the sound has been fully loaded
@@ -418,6 +422,7 @@ export class PlayerCore {
                 sound.audioElement.addEventListener('canplaythrough', canplaythroughListener);
 
                 const errorListener = () => {
+                    console.debug("Error listener for audio loading!", url)
                     sound.audioElement.removeEventListener('error', errorListener);
                     const soundLoadingError = new PlayerError('loading sound failed');
                     reject(soundLoadingError);
@@ -426,6 +431,8 @@ export class PlayerCore {
                 sound.audioElement.addEventListener('error', errorListener);
 
             } else {
+
+                console.debug("NO url for audio", url)
 
                 const noUrlError = new PlayerError('sound has no url', 1);
 
