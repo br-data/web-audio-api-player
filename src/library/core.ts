@@ -1,12 +1,18 @@
-import { PlayerSound, ISound, ISoundAttributes, ISoundSource, typeSoundStates } from './sound';
 import {
-    PlayerAudio,
-    IAudioOptions,
+    ISound,
+    ISoundAttributes,
+    ISoundSource,
+    PlayerSound,
+    typeSoundStates
+} from './sound';
+import {
     IAudioBufferSourceOptions,
+    IAudioOptions,
     IMediaElementAudioSourceOptions,
+    PlayerAudio,
 } from './audio';
-import { PlayerRequest } from './request';
-import { PlayerError, IPlayerError } from './error';
+import {PlayerRequest} from './request';
+import {IPlayerError, PlayerError} from './error';
 
 const PLAYER_MODE_AUDIO = 'player_mode_audio';
 const PLAYER_MODE_AJAX = 'player_mode_ajax';
@@ -15,8 +21,13 @@ const PLAYER_MODE_FETCH = 'player_mode_fetch';
 const WHERE_IN_QUEUE_AT_START = 'prepend';
 const WHERE_IN_QUEUE_AT_END = 'append';
 
-type typePlayerMode = typeof PLAYER_MODE_AUDIO | typeof PLAYER_MODE_AJAX | typeof PLAYER_MODE_FETCH;
-type typeWhereInQueue = typeof WHERE_IN_QUEUE_AT_START | typeof WHERE_IN_QUEUE_AT_END;
+type typePlayerMode =
+    typeof PLAYER_MODE_AUDIO
+    | typeof PLAYER_MODE_AJAX
+    | typeof PLAYER_MODE_FETCH;
+type typeWhereInQueue =
+    typeof WHERE_IN_QUEUE_AT_START
+    | typeof WHERE_IN_QUEUE_AT_END;
 
 export interface ICoreOptions {
     volume?: number;
@@ -31,7 +42,8 @@ export interface ICoreOptions {
     persistVolume?: boolean;
     loadPlayerMode?: typePlayerMode;
     audioContext?: AudioContext;
-    preload?:boolean;
+    preload?: boolean;
+    useCredentials?: boolean;
 }
 
 export interface ISoundsQueueOptions {
@@ -164,7 +176,10 @@ export class PlayerCore {
 
     }
 
-    public addSoundToQueue({ soundAttributes, whereInQueue = WHERE_IN_QUEUE_AT_END }: ISoundsQueueOptions): ISound {
+    public addSoundToQueue({
+                               soundAttributes,
+                               whereInQueue = WHERE_IN_QUEUE_AT_END
+                           }: ISoundsQueueOptions): ISound {
 
         const sound: ISound = new PlayerSound(soundAttributes);
 
@@ -177,8 +192,8 @@ export class PlayerCore {
                 break;
         }
 
-        console.debug("Will preload audio?",this._options.preload )
-        if(this._options.preload){
+        console.debug("Will preload audio?", this._options.preload)
+        if (this._options.preload) {
             this._loadSound(sound).then(() => console.debug("Loaded sound:", sound.url)).catch((e) => console.debug("Error on load sound:", sound.url, e));
         }
 
@@ -275,7 +290,7 @@ export class PlayerCore {
     public setPosition(soundPositionInPercent: number): void {
 
         // get the current sound if any
-        const currentSound = this._getSoundFromQueue({ whichSound: PlayerCore.CURRENT_SOUND });
+        const currentSound = this._getSoundFromQueue({whichSound: PlayerCore.CURRENT_SOUND});
 
         // if there is a sound currently being played
         if (currentSound !== null) {
@@ -295,9 +310,9 @@ export class PlayerCore {
 
                     }).catch((error: PlayerError) => {
 
-                        throw error;
+                    throw error;
 
-                    });
+                });
 
             } else {
 
@@ -315,8 +330,8 @@ export class PlayerCore {
     public setPositionInSeconds(soundPositionInSeconds: number, id?: number | string): void {
 
         // get the current sound if any
-        const preferredSound = this._getSoundFromQueue({ whichSound: id  });
-        const currentSound = preferredSound || this._getSoundFromQueue({ whichSound: id || PlayerCore.CURRENT_SOUND });
+        const preferredSound = this._getSoundFromQueue({whichSound: id});
+        const currentSound = preferredSound || this._getSoundFromQueue({whichSound: id || PlayerCore.CURRENT_SOUND});
 
         // if there is a sound currently being played
         if (currentSound !== null) {
@@ -324,7 +339,10 @@ export class PlayerCore {
             // is the sound is being played
             if (currentSound.state === PlayerSound.SOUND_STATE_PLAYING) {
                 // resume the playback at the given position
-                this.play({ whichSound: currentSound.id, playTimeOffset: soundPositionInSeconds });
+                this.play({
+                    whichSound: currentSound.id,
+                    playTimeOffset: soundPositionInSeconds
+                });
             } else {
                 // only set the sound position but don't play
                 currentSound.playTimeOffset = soundPositionInSeconds;
@@ -351,8 +369,28 @@ export class PlayerCore {
                 loadSoundPromise = this._loadSoundUsingRequest(sound);
                 break;
             case PlayerCore.PLAYER_MODE_FETCH:
+                /*try {
+                    const response = await fetch(url, {
+                        method: "GET",
+                        credentials: "include", // Ensures cookies and authentication headers are included
+                    });
 
-                // TODO: implement fetch
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch audio: ${response.statusText}`);
+                    }
+
+                    const audioBlob = await response.blob();
+                    const audioUrl = URL.createObjectURL(audioBlob);
+
+                    // Set the audio source dynamically
+                    const audioElement = document.getElementById("protected-audio") as HTMLAudioElement;
+                    if (audioElement) {
+                        audioElement.src = audioUrl;
+                        audioElement.play();
+                    }
+                } catch (error) {
+                    console.error("Error loading audio:", error);
+                }*/
 
                 notImplementedError = new PlayerError(PlayerCore.PLAYER_MODE_FETCH + ' is not implemented yet', 1);
 
@@ -368,7 +406,7 @@ export class PlayerCore {
     protected _loadSoundUsingAudioElement(sound: ISound): Promise<ISound | PlayerError> {
         const that = this;
 
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
 
             // if the audio element has already been created
             // we are ready to play
@@ -377,7 +415,7 @@ export class PlayerCore {
             }
 
             // extract the url and codec from sources
-            const { url, codec = null } = this._findBestSource(sound.source);
+            const {url, codec = null} = this._findBestSource(sound.source);
 
             sound.url = url;
             sound.codec = codec;
@@ -388,7 +426,6 @@ export class PlayerCore {
                 console.debug("Having url, trying to preload Audio", url)
 
                 const audioElement = new Audio();
-
                 // in chrome you will get this error message in the console:
                 // "MediaElementAudioSource outputs zeroes due to CORS access restrictions"
                 // to fix this put crossOrigin to anonymous or change the cors
@@ -396,7 +433,28 @@ export class PlayerCore {
                 // "crossOrigin" has to be set before "src"
                 audioElement.crossOrigin = 'anonymous';
 
-                audioElement.src = sound.url;
+                const fetchAudio = async (url: string) => {
+                    const response = await fetch(url, {credentials: 'include'});
+                    if (!response.ok) {
+                        throw new Error('Audio Network response was not ok');
+                    }
+                    const blob = await response.blob();
+                    return URL.createObjectURL(blob);
+                }
+
+                let src = sound.url
+
+
+                if (this._options.useCredentials) {
+                    try {
+                        src = await fetchAudio(sound.url)
+                    } catch (e) {
+                        console.error('There has been a problem with getting the audio:', e);
+                    }
+                }
+
+                audioElement.src = src;
+
                 audioElement.controls = false;
                 audioElement.autoplay = false;
                 audioElement.id = 'web_audio_api_player_sound_' + sound.id.toString();
@@ -407,6 +465,7 @@ export class PlayerCore {
                 sound.isReadyToPLay = true;
 
                 this._initializeAudioElementListeners(sound);
+
 
                 const canplaythroughListener = () => {
                     console.debug("Canplaythrough listener for audio!", url)
@@ -430,7 +489,7 @@ export class PlayerCore {
 
                 sound.audioElement.addEventListener('error', errorListener);
 
-                if(that._options.preload){
+                if (that._options.preload) {
                     console.debug("Explicitly preloading now:", url)
                     sound.audioElement.load();
                 }
@@ -455,7 +514,7 @@ export class PlayerCore {
         return new Promise((resolve, reject) => {
 
             // extract the url and codec from sources
-            const { url, codec = null } = this._findBestSource(sound.source);
+            const {url, codec = null} = this._findBestSource(sound.source);
 
             sound.url = url;
             sound.codec = codec;
@@ -471,7 +530,7 @@ export class PlayerCore {
 
                     sound.arrayBuffer = arrayBuffer;
 
-                    this._decodeSound({ sound }).then((sound: ISound) => {
+                    this._decodeSound({sound}).then((sound: ISound) => {
                         resolve(sound);
                     }).catch(reject)
 
@@ -505,7 +564,7 @@ export class PlayerCore {
 
     }
 
-    protected _decodeSound({ sound }: IDecodeSoundOptions): Promise<ISound> {
+    protected _decodeSound({sound}: IDecodeSoundOptions): Promise<ISound> {
 
         return this._playerAudio.decodeAudio(sound.arrayBuffer).then((audioBuffer) => {
 
@@ -540,15 +599,21 @@ export class PlayerCore {
         return audioBuffer;
     }
 
-    public play({ whichSound, playTimeOffset }: IPlayOptions = {}): Promise<void> {
+    public play({
+                    whichSound,
+                    playTimeOffset
+                }: IPlayOptions = {}): Promise<void> {
 
         return new Promise((resolve, reject) => {
 
             // get the current sound if any
-            const currentSound = this._getSoundFromQueue({ whichSound: PlayerCore.CURRENT_SOUND });
+            const currentSound = this._getSoundFromQueue({whichSound: PlayerCore.CURRENT_SOUND});
 
             // whichSound is optional, if set it can be the sound id or if it's a string it can be next / previous / first / last
-            const sound = this._getSoundFromQueue({ whichSound, updateIndex: true });
+            const sound = this._getSoundFromQueue({
+                whichSound,
+                updateIndex: true
+            });
 
             // if there is no sound we could play, do nothing
             if (sound === null) {
@@ -770,12 +835,15 @@ export class PlayerCore {
     protected _onEnded(): void {
 
         // get the current sound if any
-        const currentSound = this._getSoundFromQueue({ whichSound: PlayerCore.CURRENT_SOUND });
+        const currentSound = this._getSoundFromQueue({whichSound: PlayerCore.CURRENT_SOUND});
 
         // if there is a sound currently being played
         if (currentSound !== null && currentSound.state === PlayerSound.SOUND_STATE_PLAYING) {
 
-            const nextSound = this._getSoundFromQueue({ whichSound: PlayerCore.PLAY_SOUND_NEXT, updateIndex: true });
+            const nextSound = this._getSoundFromQueue({
+                whichSound: PlayerCore.PLAY_SOUND_NEXT,
+                updateIndex: true
+            });
 
             if (currentSound.onEnded !== null) {
 
@@ -811,7 +879,7 @@ export class PlayerCore {
             if (nextSound !== null) {
 
                 if (this._options.playNextOnEnded) {
-                    this.play({ whichSound: PlayerCore.CURRENT_SOUND });
+                    this.play({whichSound: PlayerCore.CURRENT_SOUND});
                 }
 
             } else {
@@ -834,7 +902,10 @@ export class PlayerCore {
      * whichSound is optional, if set it can be the sound id or if it's
      * a string it can be next / previous / first / last
      */
-    protected _getSoundFromQueue({ whichSound, updateIndex = false }: IGetSoundFromQueue = {}): ISound {
+    protected _getSoundFromQueue({
+                                     whichSound,
+                                     updateIndex = false
+                                 }: IGetSoundFromQueue = {}): ISound {
 
         let sound = null;
         let soundIndex: number = null;
@@ -898,7 +969,7 @@ export class PlayerCore {
                     break;
                 default:
                     // if "which sound to play" (soundId) is a string or number
-                    [sound, soundIndex] = this._findSoundById({ soundId: whichSound });
+                    [sound, soundIndex] = this._findSoundById({soundId: whichSound});
             }
         }
 
@@ -910,7 +981,7 @@ export class PlayerCore {
 
     }
 
-    protected _findSoundById({ soundId }: IFindSoundById): [ISound, number] {
+    protected _findSoundById({soundId}: IFindSoundById): [ISound, number] {
 
         let sound: ISound = null;
         let soundIndex = 0;
@@ -1075,7 +1146,7 @@ export class PlayerCore {
     public pause(): void {
 
         // get the current sound
-        const currentSound = this._getSoundFromQueue({ whichSound: PlayerCore.CURRENT_SOUND });
+        const currentSound = this._getSoundFromQueue({whichSound: PlayerCore.CURRENT_SOUND});
 
         if (currentSound === null) {
             return;
@@ -1102,7 +1173,7 @@ export class PlayerCore {
     public stop(): void {
 
         // get the current sound
-        const currentSound = this._getSoundFromQueue({ whichSound: PlayerCore.CURRENT_SOUND });
+        const currentSound = this._getSoundFromQueue({whichSound: PlayerCore.CURRENT_SOUND});
 
         if (currentSound === null) {
             return;
@@ -1169,28 +1240,28 @@ export class PlayerCore {
     public next(): void {
 
         // alias for play next
-        this.play({ whichSound: PlayerCore.PLAY_SOUND_NEXT });
+        this.play({whichSound: PlayerCore.PLAY_SOUND_NEXT});
 
     }
 
     public previous(): void {
 
         // alias for play previous
-        this.play({ whichSound: PlayerCore.PLAY_SOUND_PREVIOUS });
+        this.play({whichSound: PlayerCore.PLAY_SOUND_PREVIOUS});
 
     }
 
     public first(): void {
 
         // alias for play first
-        this.play({ whichSound: PlayerCore.PLAY_SOUND_FIRST });
+        this.play({whichSound: PlayerCore.PLAY_SOUND_FIRST});
 
     }
 
     public last(): void {
 
         // alias for play last
-        this.play({ whichSound: PlayerCore.PLAY_SOUND_LAST });
+        this.play({whichSound: PlayerCore.PLAY_SOUND_LAST});
 
     }
 

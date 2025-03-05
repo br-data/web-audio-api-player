@@ -1,5 +1,5 @@
 import { ISound, ISoundAttributes, ISoundSource, typeSoundStates } from './sound';
-import { PlayerAudio, IAudioOptions } from './audio';
+import { IAudioOptions, PlayerAudio } from './audio';
 import { PlayerError } from './error';
 declare const PLAYER_MODE_AUDIO = "player_mode_audio";
 declare const PLAYER_MODE_AJAX = "player_mode_ajax";
@@ -22,6 +22,7 @@ export interface ICoreOptions {
     loadPlayerMode?: typePlayerMode;
     audioContext?: AudioContext;
     preload?: boolean;
+    useCredentials?: boolean;
 }
 export interface ISoundsQueueOptions {
     soundAttributes: ISoundAttributes;

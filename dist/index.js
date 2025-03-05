@@ -703,7 +703,10 @@ var PlayerCore = (function () {
         var currentSound = preferredSound || this._getSoundFromQueue({ whichSound: id || PlayerCore.CURRENT_SOUND });
         if (currentSound !== null) {
             if (currentSound.state === PlayerSound.SOUND_STATE_PLAYING) {
-                this.play({ whichSound: currentSound.id, playTimeOffset: soundPositionInSeconds });
+                this.play({
+                    whichSound: currentSound.id,
+                    playTimeOffset: soundPositionInSeconds
+                });
             }
             else {
                 currentSound.playTimeOffset = soundPositionInSeconds;
@@ -733,50 +736,92 @@ var PlayerCore = (function () {
     PlayerCore.prototype._loadSoundUsingAudioElement = function (sound) {
         var _this = this;
         var that = this;
-        return new Promise(function (resolve, reject) {
-            var _a = _this._findBestSource(sound.source), url = _a.url, _b = _a.codec, codec = _b === void 0 ? null : _b;
-            sound.url = url;
-            sound.codec = codec;
-            sound.arrayBuffer = null;
-            if (sound.url !== null) {
-                console.debug("Having url, trying to preload Audio", url);
-                var audioElement_1 = new Audio();
-                audioElement_1.crossOrigin = 'anonymous';
-                audioElement_1.src = sound.url;
-                audioElement_1.controls = false;
-                audioElement_1.autoplay = false;
-                audioElement_1.id = 'web_audio_api_player_sound_' + sound.id.toString();
-                document.body.appendChild(audioElement_1);
-                sound.audioElement = audioElement_1;
-                sound.isReadyToPLay = true;
-                _this._initializeAudioElementListeners(sound);
-                var canplaythroughListener_1 = function () {
-                    console.debug("Canplaythrough listener for audio!", url);
-                    sound.audioElement.removeEventListener('canplaythrough', canplaythroughListener_1);
-                    if (!isNaN(audioElement_1.duration)) {
-                        sound.duration = audioElement_1.duration;
-                    }
-                    resolve(sound);
-                };
-                sound.audioElement.addEventListener('canplaythrough', canplaythroughListener_1);
-                var errorListener_1 = function () {
-                    console.debug("Error listener for audio loading!", url);
-                    sound.audioElement.removeEventListener('error', errorListener_1);
-                    var soundLoadingError = new PlayerError('loading sound failed');
-                    reject(soundLoadingError);
-                };
-                sound.audioElement.addEventListener('error', errorListener_1);
-                if (that._options.preload) {
-                    console.debug("Explicitly preloading now:", url);
-                    sound.audioElement.load();
+        return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+            var _a, url, _b, codec, audioElement_1, fetchAudio, src, e_1, canplaythroughListener_1, errorListener_1, noUrlError;
+            var _this = this;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        if (sound.audioElement !== null && sound.isReadyToPLay) {
+                            resolve(sound);
+                        }
+                        _a = this._findBestSource(sound.source), url = _a.url, _b = _a.codec, codec = _b === void 0 ? null : _b;
+                        sound.url = url;
+                        sound.codec = codec;
+                        sound.arrayBuffer = null;
+                        if (!(sound.url !== null)) return [3, 5];
+                        console.debug("Having url, trying to preload Audio", url);
+                        audioElement_1 = new Audio();
+                        audioElement_1.crossOrigin = 'anonymous';
+                        fetchAudio = function (url) { return __awaiter(_this, void 0, void 0, function () {
+                            var response, blob;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0: return [4, fetch(url, { credentials: 'include' })];
+                                    case 1:
+                                        response = _a.sent();
+                                        if (!response.ok) {
+                                            throw new Error('Audio Network response was not ok');
+                                        }
+                                        return [4, response.blob()];
+                                    case 2:
+                                        blob = _a.sent();
+                                        return [2, URL.createObjectURL(blob)];
+                                }
+                            });
+                        }); };
+                        src = sound.url;
+                        if (!this._options.useCredentials) return [3, 4];
+                        _c.label = 1;
+                    case 1:
+                        _c.trys.push([1, 3, , 4]);
+                        return [4, fetchAudio(sound.url)];
+                    case 2:
+                        src = _c.sent();
+                        return [3, 4];
+                    case 3:
+                        e_1 = _c.sent();
+                        console.error('There has been a problem with getting the audio:', e_1);
+                        return [3, 4];
+                    case 4:
+                        audioElement_1.src = src;
+                        audioElement_1.controls = false;
+                        audioElement_1.autoplay = false;
+                        audioElement_1.id = 'web_audio_api_player_sound_' + sound.id.toString();
+                        document.body.appendChild(audioElement_1);
+                        sound.audioElement = audioElement_1;
+                        sound.isReadyToPLay = true;
+                        this._initializeAudioElementListeners(sound);
+                        canplaythroughListener_1 = function () {
+                            console.debug("Canplaythrough listener for audio!", url);
+                            sound.audioElement.removeEventListener('canplaythrough', canplaythroughListener_1);
+                            if (!isNaN(audioElement_1.duration)) {
+                                sound.duration = audioElement_1.duration;
+                            }
+                            resolve(sound);
+                        };
+                        sound.audioElement.addEventListener('canplaythrough', canplaythroughListener_1);
+                        errorListener_1 = function () {
+                            console.debug("Error listener for audio loading!", url);
+                            sound.audioElement.removeEventListener('error', errorListener_1);
+                            var soundLoadingError = new PlayerError('loading sound failed');
+                            reject(soundLoadingError);
+                        };
+                        sound.audioElement.addEventListener('error', errorListener_1);
+                        if (that._options.preload) {
+                            console.debug("Explicitly preloading now:", url);
+                            sound.audioElement.load();
+                        }
+                        return [3, 6];
+                    case 5:
+                        console.debug("NO url for audio", url);
+                        noUrlError = new PlayerError('sound has no url', 1);
+                        reject(noUrlError);
+                        _c.label = 6;
+                    case 6: return [2];
                 }
-            }
-            else {
-                console.debug("NO url for audio", url);
-                var noUrlError = new PlayerError('sound has no url', 1);
-                reject(noUrlError);
-            }
-        });
+            });
+        }); });
     };
     PlayerCore.prototype._loadSoundUsingRequest = function (sound) {
         var _this = this;
@@ -841,7 +886,10 @@ var PlayerCore = (function () {
         var _b = _a === void 0 ? {} : _a, whichSound = _b.whichSound, playTimeOffset = _b.playTimeOffset;
         return new Promise(function (resolve, reject) {
             var currentSound = _this._getSoundFromQueue({ whichSound: PlayerCore.CURRENT_SOUND });
-            var sound = _this._getSoundFromQueue({ whichSound: whichSound, updateIndex: true });
+            var sound = _this._getSoundFromQueue({
+                whichSound: whichSound,
+                updateIndex: true
+            });
             if (sound === null) {
                 throw new Error('no more sounds in array');
             }
@@ -1013,7 +1061,10 @@ var PlayerCore = (function () {
     PlayerCore.prototype._onEnded = function () {
         var currentSound = this._getSoundFromQueue({ whichSound: PlayerCore.CURRENT_SOUND });
         if (currentSound !== null && currentSound.state === PlayerSound.SOUND_STATE_PLAYING) {
-            var nextSound = this._getSoundFromQueue({ whichSound: PlayerCore.PLAY_SOUND_NEXT, updateIndex: true });
+            var nextSound = this._getSoundFromQueue({
+                whichSound: PlayerCore.PLAY_SOUND_NEXT,
+                updateIndex: true
+            });
             if (currentSound.onEnded !== null) {
                 var willPlayNext = false;
                 if (nextSound !== null && this._options.playNextOnEnded) {
