@@ -684,6 +684,7 @@ var PlayerCore = (function () {
         var currentSound = this._getSoundFromQueue({ whichSound: PlayerCore.CURRENT_SOUND });
         if (currentSound !== null) {
             if (currentSound.duration === null || isNaN(currentSound.duration)) {
+                console.log("Setting position, but currentSound is ot ready", currentSound);
                 this._loadSound(currentSound)
                     .then(function (sound) {
                     var soundPositionInSeconds = (sound.duration / 100) * soundPositionInPercent;
@@ -743,6 +744,7 @@ var PlayerCore = (function () {
                 switch (_c.label) {
                     case 0:
                         if (sound.audioElement !== null && sound.isReadyToPLay) {
+                            console.log("Resolving already, as its readyToPlay");
                             resolve(sound);
                         }
                         _a = this._findBestSource(sound.source), url = _a.url, _b = _a.codec, codec = _b === void 0 ? null : _b;
@@ -913,6 +915,7 @@ var PlayerCore = (function () {
                 sound.playTimeOffset = playTimeOffset;
             }
             if (!sound.isReadyToPLay) {
+                console.log("SOUND IS NOT READY TO PLAY YET");
                 _this._loadSound(sound).then(function () {
                     _this._play(sound).then(resolve).catch(reject);
                 }).catch(reject);

@@ -298,6 +298,8 @@ export class PlayerCore {
             // if the duration did not get set manually
             if (currentSound.duration === null || isNaN(currentSound.duration)) {
 
+                console.log("Setting position, but currentSound is ot ready", currentSound)
+
                 // the user can set the sound duration manually but if he didn't the sound has to
                 // get loaded as the duration is a property of the audioBuffer
                 this._loadSound(currentSound)
@@ -411,6 +413,7 @@ export class PlayerCore {
             // if the audio element has already been created
             // we are ready to play
             if (sound.audioElement !== null && sound.isReadyToPLay) {
+                console.log("Resolving already, as its readyToPlay")
                 resolve(sound);
             }
 
@@ -657,6 +660,7 @@ export class PlayerCore {
 
             // has the sound already been loaded?
             if (!sound.isReadyToPLay) {
+                console.log("SOUND IS NOT READY TO PLAY YET")
 
                 this._loadSound(sound).then(() => {
 
